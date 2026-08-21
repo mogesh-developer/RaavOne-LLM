@@ -35,4 +35,5 @@ class GenerationService:
         self,
         request: GenerationRequest,
     ) -> AsyncIterator[GenerationChunk]:
-        return self.provider.stream_async(request)
+        async for chunk in self.provider.stream_async(request):
+            yield chunk

@@ -13,4 +13,6 @@ dependencies = [
     "groq",
     "python-dotenv",
     "llama-cpp-python",
+    "pytest",
+    "pytest-asyncio",
 ]
