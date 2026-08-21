@@ -1,0 +1,22 @@
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local configurations & secrets
+.env
+.env.local
+
+# Large local models
+models/
+
+# Egg info / build artifacts
+src/*.egg-info/
+.eggs/
+build/
+dist/

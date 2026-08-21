@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raavone_llm"
+version = "0.1.0"
+description = "A lightweight LLM client wrapper"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai",
+    "groq",
+    "python-dotenv",
+    "llama-cpp-python",
+]
