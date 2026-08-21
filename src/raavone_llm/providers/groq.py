@@ -2,7 +2,8 @@ import os
 
 from groq import Groq
 
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+import asyncio
 
 from ..exceptions import AuthenticationError, ProviderAPIError
 from ..interface import LLMProvider
@@ -133,3 +134,35 @@ class GroqProvider(LLMProvider):
         return ProviderCapabilities(
             streaming=True,
         )   
+
+    async def generate_async(
+        self,
+        request: GenerationRequest,
+    ) -> GenerationResponse:
+        return await asyncio.to_thread(self.generate, request)
+
+    async def stream_async(
+        self,
+        request: GenerationRequest,
+    ) -> AsyncIterator[GenerationChunk]:
+        queue = asyncio.Queue()
+        loop = asyncio.get_running_loop()
+
+        def producer():
+            try:
+                for chunk in self.stream(request):
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
+            except Exception as e:
+                loop.call_soon_threadsafe(queue.put_nowait, e)
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, None)
+
+        loop.run_in_executor(None, producer)
+
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            if isinstance(item, Exception):
+                raise item
+            yield item

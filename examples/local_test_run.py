@@ -1,3 +1,5 @@
+import asyncio
+
 from raavone_llm import (
     GenerationConfig,
     GenerationRequest,
@@ -7,36 +9,40 @@ from raavone_llm import (
 )
 
 
-provider = LocalProvider(
-    model_path="models/Llama/Llama-3.2-3B-Instruct-uncensored.Q4_K_S.gguf",
-    context_size=4096,
-    threads=8,
-    gpu_layers=0,
-)
+async def main():
 
-llm = RaavOneLLM(provider)
+    provider = LocalProvider(
+        model_path=(
+            "models/Llama/"
+            "Llama-3.2-3B-Instruct-uncensored.Q4_K_S.gguf"
+        ),
+        context_size=4096,
+        threads=8,
+        gpu_layers=0,
+    )
 
-request = GenerationRequest(
-    messages=[
-        LLMMessage(
-            role="user",
-            content="Explain what a local LLM is in simple terms.",
-        )
-    ],
-    config=GenerationConfig(
-        temperature=0.7,
-        max_tokens=200,
-    ),
-)
+    llm = RaavOneLLM(provider)
 
-for chunk in llm.stream(request):
-    print(chunk.content, end="", flush=True)
+    request = GenerationRequest(
+        messages=[
+            LLMMessage(
+                role="user",
+                content="Explain what an offline LLM is in simple terms.",
+            )
+        ],
+        config=GenerationConfig(
+            temperature=0.7,
+            max_tokens=150,
+        ),
+    )
 
-print()
+    response = await llm.generate_async(request)
+
+    print("Model:", response.model)
+    print("Finish reason:", response.finish_reason)
+    print()
+    print(response.content)
 
 
-provider = LocalProvider(
-    model_path="models/Llama/Llama-3.2-3B-Instruct-uncensored.Q4_K_S.gguf"
-)
-
-print(provider.capabilities)
+if __name__ == "__main__":
+    asyncio.run(main())

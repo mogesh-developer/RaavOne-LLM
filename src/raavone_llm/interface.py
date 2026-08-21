@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 
 from .capabilities import ProviderCapabilities
 from .types import (
@@ -28,4 +28,18 @@ class LLMProvider(ABC):
         self,
         request: GenerationRequest,
     ) -> Iterator[GenerationChunk]:
+        pass
+
+    @abstractmethod
+    async def generate_async(
+        self,
+        request: GenerationRequest,
+    ) -> GenerationResponse:
+        pass
+
+    @abstractmethod
+    async def stream_async(
+        self,
+        request: GenerationRequest,
+    ) -> AsyncIterator[GenerationChunk]:
         pass
