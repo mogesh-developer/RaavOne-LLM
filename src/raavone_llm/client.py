@@ -57,4 +57,34 @@ class RaavOneLLM:
         request: GenerationRequest,
     ) -> AsyncIterator[GenerationChunk]:
 
-        return await self.service.stream_async(request)
+        queue: asyncio.Queue = asyncio.Queue()
+        sentinel = object()
+        loop = asyncio.get_running_loop()
+
+        def producer():
+            try:
+                for chunk in self.stream(request):
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
+            except Exception as exc:
+                loop.call_soon_threadsafe(queue.put_nowait, exc)
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, sentinel)
+
+        task = loop.run_in_executor(None, producer)
+
+        try:
+            while True:
+                item = await queue.get()
+
+                if item is sentinel:
+                    break
+
+                if isinstance(item, Exception):
+                    raise item
+
+                yield item
+
+        finally:
+            # Task is a Future representing the producer running in the executor
+            if not task.done():
+                task.cancel()
